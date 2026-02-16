@@ -5,7 +5,7 @@ class PrompterManager: ObservableObject {
     // Persistence using UserDefaults
     @AppStorage("script_content") var content: String = Script.defaultScript.content
     @AppStorage("scroll_speed") var scrollSpeed: Double = 2.0
-    @AppStorage("font_size") var fontSize: CGFloat = 45
+    @AppStorage("font_size") var fontSize: Double = 45
     @AppStorage("window_opacity") var opacity: Double = 0.8
     
     @Published var isPlaying: Bool = false
