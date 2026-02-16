@@ -23,6 +23,18 @@ struct prompterApp: App {
                 }
                 .keyboardShortcut("e", modifiers: .command)
             }
+            
+            CommandGroup(after: .newItem) {
+                Button("Toggle Play/Pause") {
+                    manager.togglePlayPause()
+                }
+                .keyboardShortcut(.space, modifiers: [])
+                
+                Button("Reset Prompter") {
+                    manager.resetScroll()
+                }
+                .keyboardShortcut("r", modifiers: .command)
+            }
         }
         
         Window("Prompter", id: "prompter") {
@@ -46,7 +58,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         setupGlobalShortcuts()
     }
     
-    // Handle dock icon click
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         if !flag {
             openWindowAction?(id: "editor")
@@ -69,16 +80,26 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     .receive(on: RunLoop.main)
                     .sink { isLocked in
                         window.ignoresMouseEvents = isLocked
+                        // Optional: Ensure window can receive focus if not locked
+                        if !isLocked {
+                            window.makeKey()
+                        }
                     }.store(in: &self.cancellables)
             }
         }
     }
     
     func setupGlobalShortcuts() {
+        // Local Monitor (handles events when app is active)
         localMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            return (self?.handleKeyEvent(event) ?? false) ? nil : event
+            if self?.handleKeyEvent(event) == true {
+                return nil // Consumed
+            }
+            return event
         }
         
+        // Global Monitor (handles events when app is in background)
+        // Note: Requires Accessibility Permissions
         eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
             _ = self?.handleKeyEvent(event)
         }
@@ -87,46 +108,55 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func handleKeyEvent(_ event: NSEvent) -> Bool {
         guard let manager = manager else { return false }
         
+        let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+        let isCmd = flags == .command
+        
         // Command + L: Toggle Lock
-        if event.modifierFlags.contains(.command) && event.charactersIgnoringModifiers == "l" {
+        if isCmd && event.charactersIgnoringModifiers == "l" {
             manager.isLocked.toggle()
             return true
         }
         
         // Command + E: Open Editor
-        if event.modifierFlags.contains(.command) && event.charactersIgnoringModifiers == "e" {
+        if isCmd && event.charactersIgnoringModifiers == "e" {
             openWindowAction?(id: "editor")
             return true
         }
         
-        // Space: Play/Pause
-        if event.keyCode == 49 { // Space
+        // Space: Play/Pause (keyCode 49)
+        // We only handle Space globally if it's not being typed in a text field
+        // But for global monitor, we usually want it. 
+        // Note: Global Space might be annoying, but prompter users often want it.
+        if event.keyCode == 49 && flags.isEmpty { 
             manager.togglePlayPause()
             return true
         }
         
         // Command + Plus/Minus: Speed
-        if event.modifierFlags.contains(.command) && (event.characters == "+" || event.characters == "=") {
+        if isCmd && (event.characters == "+" || event.characters == "=") {
             manager.updateSpeed(delta: 0.5)
             return true
         }
-        if event.modifierFlags.contains(.command) && event.characters == "-" {
+        if isCmd && event.characters == "-" {
             manager.updateSpeed(delta: -0.5)
             return true
         }
         
         // Command + Up/Down: Manual Scroll
-        if event.modifierFlags.contains(.command) && event.keyCode == 126 { // Up Arrow
-            manager.manualScroll(delta: 20)
+        // KeyCodes: 126 = Up, 125 = Down
+        if isCmd && event.keyCode == 126 { // Up Arrow
+            // Rewind (Move text down)
+            manager.manualScroll(delta: -20)
             return true
         }
-        if event.modifierFlags.contains(.command) && event.keyCode == 125 { // Down Arrow
-            manager.manualScroll(delta: -20)
+        if isCmd && event.keyCode == 125 { // Down Arrow
+            // Advance (Move text up)
+            manager.manualScroll(delta: 20)
             return true
         }
         
         // Command + R: Reset
-        if event.modifierFlags.contains(.command) && event.charactersIgnoringModifiers == "r" {
+        if isCmd && event.charactersIgnoringModifiers == "r" {
             manager.resetScroll()
             return true
         }

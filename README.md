@@ -19,8 +19,8 @@ OpenPrompter is a lightweight, efficient macOS teleprompter application designed
 | **Toggle Lock (Click-through)** | `Cmd + L` |
 | **Play / Pause** | `Space` |
 | **Open Script Editor** | `Cmd + E` |
-| **Advance Text (Forward)** | `Cmd + Up Arrow` |
-| **Rewind Text (Backward)** | `Cmd + Down Arrow` |
+| **Advance Text (Forward)** | `Cmd + Down Arrow` |
+| **Rewind Text (Backward)** | `Cmd + Up Arrow` |
 | **Increase Speed** | `Cmd + Plus (+)` |
 | **Decrease Speed** | `Cmd + Minus (-)` |
 | **Reset Scroll Position** | `Cmd + R` |
@@ -34,7 +34,7 @@ OpenPrompter is a lightweight, efficient macOS teleprompter application designed
 5. **Lock**: Press `Cmd + L` to lock the window into click-through mode.
 6. **Start**: Press `Space` to start scrolling.
 
-> **Note**: Accessibility permissions are required for global hotkeys to function when the application is not the active window.
+> **Note**: Accessibility permissions are required for global hotkeys to function when the application is not the active window. You can grant this in System Settings -> Privacy & Security -> Accessibility.
 
 ## 💻 Tech Stack
 

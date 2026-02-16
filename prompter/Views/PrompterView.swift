@@ -6,12 +6,10 @@ struct PrompterView: View {
     
     var body: some View {
         ZStack {
-            // Background with adjustable opacity
-            // Change background tint when unlocked to indicate interactivity
+            // Background
             Color.black.opacity(manager.isLocked ? manager.opacity : max(0.4, manager.opacity - 0.2))
             
             if !manager.isLocked {
-                // Background tint for unlocked state
                 Color.blue.opacity(0.1)
                     .ignoresSafeArea()
             }
@@ -20,38 +18,43 @@ struct PrompterView: View {
             GeometryReader { geo in
                 let centerLine = geo.size.height / 2
                 
-                VStack(spacing: 0) {
-                    Text(manager.content)
-                        .font(.system(size: manager.fontSize, weight: .bold, design: .rounded))
-                        .foregroundColor(.white)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 40)
-                        .background(
-                            GeometryReader { textGeo in
-                                Color.clear
-                                    .onAppear {
-                                        manager.contentHeight = textGeo.size.height
-                                    }
-                                    .onChange(of: textGeo.size.height) { newHeight in
-                                        manager.contentHeight = newHeight
-                                    }
-                            }
-                        )
-                        // This offset calculation keeps the text moving through the center
-                        .offset(y: centerLine - manager.scrollOffset)
+                // Splitting into lines helps with layout and prevents truncation of huge strings
+                let lines = manager.content.components(separatedBy: .newlines)
+                
+                VStack(spacing: manager.fontSize * 0.3) {
+                    ForEach(0..<lines.count, id: \.self) { index in
+                        Text(lines[index])
+                            .font(.system(size: manager.fontSize, weight: .bold, design: .rounded))
+                            .foregroundColor(.white)
+                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: geo.size.width - 40) // Prevent horizontal overflow
+                    }
                 }
                 .frame(width: geo.size.width)
+                .background(
+                    GeometryReader { textGeo in
+                        Color.clear
+                            .onAppear {
+                                manager.contentHeight = textGeo.size.height
+                            }
+                            .onChange(of: textGeo.size.height) { newHeight in
+                                manager.contentHeight = newHeight
+                            }
+                    }
+                )
+                .offset(y: centerLine - manager.scrollOffset)
+                .animation(.linear(duration: 0.1), value: manager.scrollOffset) // Smooth out manual jumps
             }
             .clipped()
             
-            // Scroll Wheel Handler (only active when unlocked)
+            // Scroll Wheel Handler
             if !manager.isLocked {
                 ScrollWheelHandler { deltaY in
                     manager.updateOffsetWithWheel(deltaY: deltaY)
                 }
             }
             
-            // Focus Highlight Area (The "Focus Line")
+            // Focus Highlight Area
             Rectangle()
                 .fill(
                     LinearGradient(
@@ -66,7 +69,7 @@ struct PrompterView: View {
                 )
                 .allowsHitTesting(false)
             
-            // Visual indicators for the focus line (Left/Right carets)
+            // Indicators
             HStack {
                 Image(systemName: "chevron.right")
                     .foregroundColor(.yellow.opacity(0.8))
@@ -79,7 +82,7 @@ struct PrompterView: View {
             .padding(.horizontal, 8)
             .allowsHitTesting(false)
 
-            // Gradient Overlays to fade out non-focused text
+            // Gradient Overlays
             VStack(spacing: 0) {
                 LinearGradient(
                     gradient: Gradient(colors: [.black, .black.opacity(0)]),
@@ -110,7 +113,6 @@ struct PrompterView: View {
     }
 }
 
-// Helper view to capture scroll wheel events
 struct ScrollWheelHandler: NSViewRepresentable {
     var onScroll: (CGFloat) -> Void
 
@@ -128,8 +130,6 @@ struct ScrollWheelHandler: NSViewRepresentable {
         var onScroll: ((CGFloat) -> Void)?
 
         override func scrollWheel(with event: NSEvent) {
-            // Using scrollingDeltaY for smooth scrolling
-            // If hasPreciseScrollingDeltas is true, it's a trackpad or magic mouse
             let delta = event.hasPreciseScrollingDeltas ? event.scrollingDeltaY : event.deltaY * 10
             onScroll?(delta)
         }
