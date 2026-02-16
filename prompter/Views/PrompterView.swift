@@ -18,16 +18,26 @@ struct PrompterView: View {
             GeometryReader { geo in
                 let centerLine = geo.size.height / 2
                 
-                // Splitting into lines helps with layout and prevents truncation of huge strings
-                let lines = manager.content.components(separatedBy: .newlines)
-                
-                VStack(spacing: manager.fontSize * 0.3) {
-                    ForEach(0..<lines.count, id: \.self) { index in
-                        Text(lines[index])
-                            .font(.system(size: manager.fontSize, weight: .bold, design: .rounded))
-                            .foregroundColor(.white)
-                            .multilineTextAlignment(.center)
-                            .frame(maxWidth: geo.size.width - 40) // Prevent horizontal overflow
+                VStack(spacing: manager.fontSize * 0.6) {
+                    // We split by double newlines or single newlines to handle paragraphs better
+                    // But for teleprompter, often simple newline split is best
+                    let paragraphs = manager.content.components(separatedBy: .newlines)
+                    
+                    ForEach(0..<paragraphs.count, id: \.self) { index in
+                        let text = paragraphs[index].trimmingCharacters(in: .whitespaces)
+                        if !text.isEmpty {
+                            Text(text)
+                                .font(.system(size: manager.fontSize, weight: .bold, design: .rounded))
+                                .foregroundColor(.white)
+                                .multilineTextAlignment(.center)
+                                .lineLimit(nil) // CRITICAL: Allow text to wrap to multiple lines
+                                .fixedSize(horizontal: false, vertical: true) // CRITICAL: Allow vertical expansion
+                                .frame(maxWidth: geo.size.width - 60)
+                        } else {
+                            // Render empty lines as spacers
+                            Spacer()
+                                .frame(height: manager.fontSize * 0.5)
+                        }
                     }
                 }
                 .frame(width: geo.size.width)
@@ -42,8 +52,10 @@ struct PrompterView: View {
                             }
                     }
                 )
+                // Offset calculation
                 .offset(y: centerLine - manager.scrollOffset)
-                .animation(.linear(duration: 0.1), value: manager.scrollOffset) // Smooth out manual jumps
+                // Use a very subtle animation for manual jumps to make them less jarring
+                .animation(.easeInOut(duration: 0.1), value: manager.scrollOffset)
             }
             .clipped()
             
