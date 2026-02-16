@@ -8,6 +8,11 @@ struct EditorView: View {
     var body: some View {
         VStack(spacing: 20) {
             HStack {
+                Image("HamsterLogo")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 32, height: 32)
+                
                 Text("OpenPrompter Editor")
                     .font(.title2.bold())
                 Spacer()

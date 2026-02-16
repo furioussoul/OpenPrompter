@@ -9,6 +9,14 @@ struct PrompterView: View {
             // Background
             Color.black.opacity(manager.isLocked ? manager.opacity : max(0.4, manager.opacity - 0.2))
             
+            // Watermark Logo
+            Image("HamsterLogo")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 150, height: 150)
+                .opacity(0.1)
+                .grayscale(1.0)
+            
             if !manager.isLocked {
                 Color.blue.opacity(0.1)
                     .ignoresSafeArea()
