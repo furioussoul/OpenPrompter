@@ -106,55 +106,61 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func handleKeyEvent(_ event: NSEvent) -> Bool {
         guard let manager = manager else { return false }
         
-        let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
-        let isCmdOnly = flags == .command
-        let isNoModifier = flags.isEmpty || flags == .capsLock
+        let flags = event.modifierFlags
+        let isCmd = flags.contains(.command)
+        let isOption = flags.contains(.option)
+        let isControl = flags.contains(.control)
+        let isShift = flags.contains(.shift)
+        
+        // We want Cmd + Key, but ignoring things like CapsLock or NumLock
+        let hasCmd = isCmd && !isOption && !isControl
         
         // Command + L: Toggle Lock
-        if isCmdOnly && event.charactersIgnoringModifiers?.lowercased() == "l" {
+        if hasCmd && event.charactersIgnoringModifiers?.lowercased() == "l" {
             manager.isLocked.toggle()
             return true
         }
         
         // Command + E: Open Editor
-        if isCmdOnly && event.charactersIgnoringModifiers?.lowercased() == "e" {
+        if hasCmd && event.charactersIgnoringModifiers?.lowercased() == "e" {
             openWindowAction?(id: "editor")
             return true
         }
         
         // Space: Play/Pause (keyCode 49)
-        if event.keyCode == 49 && isNoModifier {
-            manager.togglePlayPause()
-            return true
+        if event.keyCode == 49 { 
+            // Allow space only if no major modifiers (Cmd/Opt/Ctrl) are pressed
+            if !isCmd && !isOption && !isControl {
+                manager.togglePlayPause()
+                return true
+            }
         }
         
         // Command + Plus/Minus: Speed
-        if isCmdOnly && (event.charactersIgnoringModifiers == "+" || event.charactersIgnoringModifiers == "=") {
+        if hasCmd && (event.charactersIgnoringModifiers == "+" || event.charactersIgnoringModifiers == "=") {
             manager.updateSpeed(delta: 0.5)
             return true
         }
-        if isCmdOnly && event.charactersIgnoringModifiers == "-" {
+        if hasCmd && event.charactersIgnoringModifiers == "-" {
             manager.updateSpeed(delta: -0.5)
             return true
         }
         
         // Command + Up/Down: Manual Scroll
         // 126 = Up, 125 = Down
-        if isCmdOnly && event.keyCode == 126 { // Up Arrow
-            // User: "上要往上翻" -> If we interpret "翻" as moving the view UP to see previous content:
-            // This is "Rewind" -> delta should be negative to move text DOWN.
-            manager.manualScroll(delta: -40) // Increased delta for better feedback
+        if isCmd && event.keyCode == 126 { // Up Arrow
+            // User wants to see content ABOVE -> decrease scrollOffset
+            manager.manualScroll(delta: -60)
             return true
         }
-        if isCmdOnly && event.keyCode == 125 { // Down Arrow
-            // User: "下要往下翻看到下面的内容" -> This is "Advance"
-            // delta should be positive to move text UP.
-            manager.manualScroll(delta: 40)
+        if isCmd && event.keyCode == 125 { // Down Arrow
+            // User wants to see content BELOW -> increase scrollOffset
+            manager.manualScroll(delta: 60)
             return true
         }
         
         // Command + R: Reset
-        if isCmdOnly && event.charactersIgnoringModifiers?.lowercased() == "r" {
+        if hasCmd && event.charactersIgnoringModifiers?.lowercased() == "r" {
             manager.resetScroll()
             return true
         }

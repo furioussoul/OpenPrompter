@@ -61,7 +61,9 @@ class PrompterManager: ObservableObject {
     }
     
     func manualScroll(delta: CGFloat) {
-        scrollOffset = max(0, min(contentHeight, scrollOffset + delta))
+        // Remove upper bound clamp to ensure user can always move the text 
+        // regardless of measurement status.
+        scrollOffset = max(0, scrollOffset + delta)
     }
     
     func updateOffsetWithWheel(deltaY: CGFloat) {
