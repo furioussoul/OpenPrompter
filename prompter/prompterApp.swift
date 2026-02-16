@@ -28,7 +28,7 @@ struct prompterApp: App {
                 Button("Toggle Play/Pause") {
                     manager.togglePlayPause()
                 }
-                .keyboardShortcut(.space, modifiers: [])
+                .keyboardShortcut(.space, modifiers: .command)
                 
                 Button("Reset Prompter") {
                     manager.resetScroll()
@@ -127,13 +127,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return true
         }
         
-        // Space: Play/Pause (keyCode 49)
-        if event.keyCode == 49 { 
-            // Allow space only if no major modifiers (Cmd/Opt/Ctrl) are pressed
-            if !isCmd && !isOption && !isControl {
-                manager.togglePlayPause()
-                return true
-            }
+        // Command + Space: Play/Pause (keyCode 49)
+        if hasCmd && event.keyCode == 49 { 
+            manager.togglePlayPause()
+            return true
         }
         
         // Command + Plus/Minus: Speed
@@ -148,12 +145,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         // Command + Up/Down: Manual Scroll
         // 126 = Up, 125 = Down
-        if isCmd && event.keyCode == 126 { // Up Arrow
+        if hasCmd && event.keyCode == 126 { // Up Arrow
             // User wants to see content ABOVE -> decrease scrollOffset
             manager.manualScroll(delta: -60)
             return true
         }
-        if isCmd && event.keyCode == 125 { // Down Arrow
+        if hasCmd && event.keyCode == 125 { // Down Arrow
             // User wants to see content BELOW -> increase scrollOffset
             manager.manualScroll(delta: 60)
             return true

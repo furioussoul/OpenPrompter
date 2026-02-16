@@ -57,11 +57,12 @@ struct EditorView: View {
                 Button(action: manager.togglePlayPause) {
                     Label(manager.isPlaying ? "Pause" : "Play", systemImage: manager.isPlaying ? "pause.fill" : "play.fill")
                 }
-                .keyboardShortcut(.space, modifiers: [])
+                .keyboardShortcut(.space, modifiers: .command)
                 
                 Button(action: manager.resetScroll) {
                     Label("Reset", systemImage: "arrow.counterclockwise")
                 }
+                .keyboardShortcut("r", modifiers: .command)
                 
                 Spacer()
                 
@@ -69,6 +70,7 @@ struct EditorView: View {
                     Label(manager.isLocked ? "Unlock Mouse" : "Lock Mouse", 
                           systemImage: manager.isLocked ? "lock.fill" : "lock.open.fill")
                 }
+                .keyboardShortcut("l", modifiers: .command)
                 .help("Cmd+L to toggle globally")
                 
                 Button("Quit") {
