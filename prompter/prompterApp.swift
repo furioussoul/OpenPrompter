@@ -6,12 +6,14 @@ import Combine
 struct prompterApp: App {
     @StateObject private var manager = PrompterManager()
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    @Environment(\.openWindow) private var openWindow
     
     var body: some Scene {
         Window("Script Editor", id: "editor") {
             EditorView(manager: manager)
                 .onAppear {
                     appDelegate.manager = manager
+                    appDelegate.openWindowAction = openWindow
                 }
         }
         
@@ -22,17 +24,36 @@ struct prompterApp: App {
                 }
         }
         .windowStyle(.hiddenTitleBar)
+        
+        // Add Menu Commands
+        Commands {
+            CommandGroup(replacing: .newItem) {
+                Button("Open Script Editor") {
+                    openWindow(id: "editor")
+                }
+                .keyboardShortcut("e", modifiers: .command)
+            }
+        }
     }
 }
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     var manager: PrompterManager?
+    var openWindowAction: OpenWindowAction?
     var eventMonitor: Any?
     var localMonitor: Any?
     private var cancellables = Set<AnyCancellable>()
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         setupGlobalShortcuts()
+    }
+    
+    // Handle dock icon click
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        if !flag {
+            openWindowAction?(id: "editor")
+        }
+        return true
     }
     
     func setupPrompterWindow(manager: PrompterManager) {
@@ -74,6 +95,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return true
         }
         
+        // Command + E: Open Editor
+        if event.modifierFlags.contains(.command) && event.charactersIgnoringModifiers == "e" {
+            openWindowAction?(id: "editor")
+            return true
+        }
+        
         // Space: Play/Pause
         if event.keyCode == 49 { // Space
             manager.togglePlayPause()
@@ -90,13 +117,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return true
         }
         
-        // Refined Navigation Logic (PRD 4.1)
-        // Cmd + Up Arrow: Advance script (increase offset)
+        // Command + Up/Down: Manual Scroll
         if event.modifierFlags.contains(.command) && event.keyCode == 126 { // Up Arrow
             manager.manualScroll(delta: 20)
             return true
         }
-        // Cmd + Down Arrow: Rewind script (decrease offset)
         if event.modifierFlags.contains(.command) && event.keyCode == 125 { // Down Arrow
             manager.manualScroll(delta: -20)
             return true
