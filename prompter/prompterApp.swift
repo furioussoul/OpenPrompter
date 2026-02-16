@@ -67,7 +67,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func setupGlobalShortcuts() {
         // Local Monitor (when app is active)
         localMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            return self?.handleKeyEvent(event) ? nil : event
+            return (self?.handleKeyEvent(event) ?? false) ? nil : event
         }
         
         // Global Monitor (when app is background)
