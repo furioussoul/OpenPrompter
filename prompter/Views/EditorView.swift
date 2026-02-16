@@ -1,4 +1,5 @@
 import SwiftUI
+import ApplicationServices
 
 struct EditorView: View {
     @ObservedObject var manager: PrompterManager
@@ -95,5 +96,3 @@ struct EditorView: View {
         .frame(minWidth: 500, minHeight: 600)
     }
 }
-
-import ApplicationServices
