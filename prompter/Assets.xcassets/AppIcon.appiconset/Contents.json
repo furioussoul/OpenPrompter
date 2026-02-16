@@ -59,6 +59,11 @@
       "idiom" : "mac",
       "size" : "512x512",
       "scale" : "2x"
+    },
+    {
+      "filename" : "appicon.svg",
+      "idiom" : "universal",
+      "size" : "1024x1024"
     }
   ],
   "info" : {
