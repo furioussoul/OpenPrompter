@@ -16,6 +16,14 @@ struct prompterApp: App {
                     appDelegate.openWindowAction = openWindow
                 }
         }
+        .commands {
+            CommandGroup(replacing: .newItem) {
+                Button("Open Script Editor") {
+                    openWindow(id: "editor")
+                }
+                .keyboardShortcut("e", modifiers: .command)
+            }
+        }
         
         Window("Prompter", id: "prompter") {
             PrompterView(manager: manager)
@@ -24,16 +32,6 @@ struct prompterApp: App {
                 }
         }
         .windowStyle(.hiddenTitleBar)
-        
-        // Add Menu Commands
-        Commands {
-            CommandGroup(replacing: .newItem) {
-                Button("Open Script Editor") {
-                    openWindow(id: "editor")
-                }
-                .keyboardShortcut("e", modifiers: .command)
-            }
-        }
     }
 }
 
