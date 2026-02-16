@@ -64,7 +64,20 @@ The app must listen for system-wide events using `NSEvent` or `ShortcutRecorder`
 
 ---
 
-## 6. Future Enhancements (v2)
-- Multi-monitor support.
-- External controller support (Bluetooth foot pedals).
-- Rich text support (Colors, Bold).
+## 7. Technical Implementation Hints (For Developers)
+- **Window Management**: Use `NSWindow` properties:
+  - `.isMovableByWindowBackground = true`
+  - `.level = .floating` (or higher)
+  - `.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]`
+  - `.ignoresMouseEvents = true` (Implement a toggle to allow moving/editing)
+- **Global Hotkeys**: Use `NSEvent.addGlobalMonitorForEvents` or a library like `KeyboardShortcuts`.
+- **Text Rendering**: Use `ScrollView` with a `Timer` or `DisplayLink` to control scroll offset precisely.
+- **Focus Highlighting**: Use a `LinearGradient` mask or a fixed "focus box" overlay to highlight the center line.
+
+---
+
+## 8. Success Metrics
+- **Zero Mouse Usage**: User can start, pause, and adjust a script recording without touching the mouse once.
+- **Cross-Space Stability**: No disappearing prompter when switching from VS Code (Space 1) to a browser (Space 2).
+- **CPU Usage**: Under 2% on M1/M2 chips during active scrolling.
+
