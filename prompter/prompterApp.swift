@@ -80,7 +80,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     .receive(on: RunLoop.main)
                     .sink { isLocked in
                         window.ignoresMouseEvents = isLocked
-                        // Optional: Ensure window can receive focus if not locked
                         if !isLocked {
                             window.makeKey()
                         }
@@ -90,16 +89,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     func setupGlobalShortcuts() {
-        // Local Monitor (handles events when app is active)
+        // Local Monitor
         localMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             if self?.handleKeyEvent(event) == true {
-                return nil // Consumed
+                return nil
             }
             return event
         }
         
-        // Global Monitor (handles events when app is in background)
-        // Note: Requires Accessibility Permissions
+        // Global Monitor
         eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
             _ = self?.handleKeyEvent(event)
         }
@@ -109,54 +107,54 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard let manager = manager else { return false }
         
         let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
-        let isCmd = flags == .command
+        let isCmdOnly = flags == .command
+        let isNoModifier = flags.isEmpty || flags == .capsLock
         
         // Command + L: Toggle Lock
-        if isCmd && event.charactersIgnoringModifiers == "l" {
+        if isCmdOnly && event.charactersIgnoringModifiers?.lowercased() == "l" {
             manager.isLocked.toggle()
             return true
         }
         
         // Command + E: Open Editor
-        if isCmd && event.charactersIgnoringModifiers == "e" {
+        if isCmdOnly && event.charactersIgnoringModifiers?.lowercased() == "e" {
             openWindowAction?(id: "editor")
             return true
         }
         
         // Space: Play/Pause (keyCode 49)
-        // We only handle Space globally if it's not being typed in a text field
-        // But for global monitor, we usually want it. 
-        // Note: Global Space might be annoying, but prompter users often want it.
-        if event.keyCode == 49 && flags.isEmpty { 
+        if event.keyCode == 49 && isNoModifier {
             manager.togglePlayPause()
             return true
         }
         
         // Command + Plus/Minus: Speed
-        if isCmd && (event.characters == "+" || event.characters == "=") {
+        if isCmdOnly && (event.charactersIgnoringModifiers == "+" || event.charactersIgnoringModifiers == "=") {
             manager.updateSpeed(delta: 0.5)
             return true
         }
-        if isCmd && event.characters == "-" {
+        if isCmdOnly && event.charactersIgnoringModifiers == "-" {
             manager.updateSpeed(delta: -0.5)
             return true
         }
         
         // Command + Up/Down: Manual Scroll
-        // KeyCodes: 126 = Up, 125 = Down
-        if isCmd && event.keyCode == 126 { // Up Arrow
-            // Rewind (Move text down)
-            manager.manualScroll(delta: -20)
+        // 126 = Up, 125 = Down
+        if isCmdOnly && event.keyCode == 126 { // Up Arrow
+            // User: "上要往上翻" -> If we interpret "翻" as moving the view UP to see previous content:
+            // This is "Rewind" -> delta should be negative to move text DOWN.
+            manager.manualScroll(delta: -40) // Increased delta for better feedback
             return true
         }
-        if isCmd && event.keyCode == 125 { // Down Arrow
-            // Advance (Move text up)
-            manager.manualScroll(delta: 20)
+        if isCmdOnly && event.keyCode == 125 { // Down Arrow
+            // User: "下要往下翻看到下面的内容" -> This is "Advance"
+            // delta should be positive to move text UP.
+            manager.manualScroll(delta: 40)
             return true
         }
         
         // Command + R: Reset
-        if isCmd && event.charactersIgnoringModifiers == "r" {
+        if isCmdOnly && event.charactersIgnoringModifiers?.lowercased() == "r" {
             manager.resetScroll()
             return true
         }
