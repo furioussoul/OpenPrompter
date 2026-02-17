@@ -55,7 +55,7 @@ struct PrompterView: View {
                             .onAppear {
                                 manager.contentHeight = textGeo.size.height
                             }
-                            .onChange(of: textGeo.size.height) { newHeight in
+                            .onChange(of: textGeo.size.height) { oldHeight, newHeight in
                                 manager.contentHeight = newHeight
                             }
                     }

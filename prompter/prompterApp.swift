@@ -129,17 +129,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         
         // 2. FOCUS-ONLY SHORTCUTS (Only work when app is active)
-        // If this is a global event (background), stop here
         if isGlobal { return false }
         
         // Space: Play/Pause (keyCode 49)
         if event.keyCode == 49 { 
-            // Only toggle if no major modifiers (Cmd/Opt/Ctrl) are pressed
             if !isCmd && !isOption && !isControl {
                 // Check if user is typing in a text field
                 if let responder = NSApp.keyWindow?.firstResponder,
                    responder.isKind(of: NSTextView.self) {
-                    return false // Let the text view handle the space
+                    return false
                 }
                 manager.togglePlayPause()
                 return true
@@ -157,82 +155,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         
         // Command + Up/Down: Manual Scroll
-        // 126 = Up, 125 = Down
         if hasCmd && event.keyCode == 126 { // Up Arrow
             manager.manualScroll(delta: -60)
             return true
         }
         if hasCmd && event.keyCode == 125 { // Down Arrow
-            manager.manualScroll(delta: 60)
-            return true
-        }
-        
-        // Command + R: Reset
-        if hasCmd && event.charactersIgnoringModifiers?.lowercased() == "r" {
-            manager.resetScroll()
-            return true
-        }
-        
-        return false
-    }
-            return event
-        }
-        
-        // Global Monitor
-        eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            _ = self?.handleKeyEvent(event)
-        }
-    }
-    
-    func handleKeyEvent(_ event: NSEvent) -> Bool {
-        guard let manager = manager else { return false }
-        
-        let flags = event.modifierFlags
-        let isCmd = flags.contains(.command)
-        let isOption = flags.contains(.option)
-        let isControl = flags.contains(.control)
-        let isShift = flags.contains(.shift)
-        
-        // We want Cmd + Key, but ignoring things like CapsLock or NumLock
-        let hasCmd = isCmd && !isOption && !isControl
-        
-        // Command + L: Toggle Lock
-        if hasCmd && event.charactersIgnoringModifiers?.lowercased() == "l" {
-            manager.isLocked.toggle()
-            return true
-        }
-        
-        // Command + E: Open Editor
-        if hasCmd && event.charactersIgnoringModifiers?.lowercased() == "e" {
-            openWindowAction?(id: "editor")
-            return true
-        }
-        
-        // Command + Space: Play/Pause (keyCode 49)
-        if hasCmd && event.keyCode == 49 { 
-            manager.togglePlayPause()
-            return true
-        }
-        
-        // Command + Plus/Minus: Speed
-        if hasCmd && (event.charactersIgnoringModifiers == "+" || event.charactersIgnoringModifiers == "=") {
-            manager.updateSpeed(delta: 0.5)
-            return true
-        }
-        if hasCmd && event.charactersIgnoringModifiers == "-" {
-            manager.updateSpeed(delta: -0.5)
-            return true
-        }
-        
-        // Command + Up/Down: Manual Scroll
-        // 126 = Up, 125 = Down
-        if hasCmd && event.keyCode == 126 { // Up Arrow
-            // User wants to see content ABOVE -> decrease scrollOffset
-            manager.manualScroll(delta: -60)
-            return true
-        }
-        if hasCmd && event.keyCode == 125 { // Down Arrow
-            // User wants to see content BELOW -> increase scrollOffset
             manager.manualScroll(delta: 60)
             return true
         }
