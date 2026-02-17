@@ -122,6 +122,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return true
         }
         
+        // Command + I: Toggle Mirror Mode
+        if hasCmd && event.charactersIgnoringModifiers?.lowercased() == "i" {
+            manager.isMirrored.toggle()
+            return true
+        }
+        
         // Command + E: Open Editor
         if hasCmd && event.charactersIgnoringModifiers?.lowercased() == "e" {
             openWindowAction?(id: "editor")
