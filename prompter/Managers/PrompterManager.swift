@@ -25,7 +25,9 @@ class PrompterManager: ObservableObject {
     
     func startScrolling() {
         // If already at end, don't start
-        if scrollOffset >= contentHeight {
+        // Allow a small buffer for measurement lag
+        let effectiveHeight = contentHeight > 0 ? contentHeight : 100000
+        if scrollOffset >= effectiveHeight {
             return
         }
         
@@ -37,7 +39,9 @@ class PrompterManager: ObservableObject {
                 guard let self = self, self.isPlaying else { return }
                 
                 let nextOffset = self.scrollOffset + CGFloat(self.scrollSpeed)
-                if nextOffset >= self.contentHeight {
+                
+                // Stop exactly at contentHeight
+                if self.contentHeight > 0 && nextOffset >= self.contentHeight {
                     self.scrollOffset = self.contentHeight
                     self.stopScrolling()
                 } else {
@@ -61,17 +65,15 @@ class PrompterManager: ObservableObject {
     }
     
     func manualScroll(delta: CGFloat) {
-        // Remove upper bound clamp to ensure user can always move the text 
-        // regardless of measurement status.
-        scrollOffset = max(0, scrollOffset + delta)
+        // Limit the scroll offset so user can't scroll into "empty space"
+        // We allow scrolling up to contentHeight (where last line is at focus)
+        let maxLimit = contentHeight > 0 ? contentHeight : 100000
+        scrollOffset = max(0, min(maxLimit, scrollOffset + delta))
     }
     
     func updateOffsetWithWheel(deltaY: CGFloat) {
-        // Natural scrolling: deltaY is positive when swiping down (which should move text down/rewind)
+        // Natural scrolling: deltaY is positive when swiping down
         // In our system, scrollOffset += delta advances text (moves text up).
-        // So we want to subtract deltaY to match natural macOS feel if deltaY is from standard events.
-        // Actually, NSEvent.scrollingDeltaY is positive when scrolling "up" (fingers moving down on trackpad).
-        // Let's test with simple subtraction first.
         manualScroll(delta: -deltaY)
     }
 }
