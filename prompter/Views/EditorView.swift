@@ -49,7 +49,37 @@ struct EditorView: View {
                     Slider(value: $manager.opacity, in: 0.1...1)
                     Text("\(Int(manager.opacity * 100))%")
                 }
+                
+                GridRow {
+                    Text("Mirror Mode")
+                    Toggle("", isOn: $manager.isMirrored)
+                        .toggleStyle(.switch)
+                    Text(manager.isMirrored ? "On" : "Off")
+                }
             }
+            
+            Divider()
+            
+            VStack(alignment: .leading, spacing: 5) {
+                Text("Shortcuts Reference:")
+                    .font(.headline)
+                HStack(spacing: 20) {
+                    VStack(alignment: .leading) {
+                        Text("• Space: Play/Pause")
+                        Text("• Cmd + R: Reset")
+                        Text("• Cmd + L: Toggle Lock (Global)")
+                        Text("• Cmd + I: Toggle Mirror (Global)")
+                    }
+                    VStack(alignment: .leading) {
+                        Text("• Cmd + +/-: Change Speed")
+                        Text("• Cmd + ↑/↓: Scroll Manual")
+                        Text("• Cmd + E: Open Editor (Global)")
+                    }
+                }
+                .font(.caption)
+                .foregroundColor(.secondary)
+            }
+            .padding(.vertical, 5)
             
             Divider()
             
