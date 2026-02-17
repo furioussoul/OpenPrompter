@@ -57,7 +57,7 @@ struct EditorView: View {
                 Button(action: manager.togglePlayPause) {
                     Label(manager.isPlaying ? "Pause" : "Play", systemImage: manager.isPlaying ? "pause.fill" : "play.fill")
                 }
-                .keyboardShortcut(.space, modifiers: .command)
+                .keyboardShortcut(.space, modifiers: [])
                 
                 Button(action: manager.resetScroll) {
                     Label("Reset", systemImage: "arrow.counterclockwise")

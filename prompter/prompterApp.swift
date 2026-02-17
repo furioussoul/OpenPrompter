@@ -28,7 +28,7 @@ struct prompterApp: App {
                 Button("Toggle Play/Pause") {
                     manager.togglePlayPause()
                 }
-                .keyboardShortcut(.space, modifiers: .command)
+                .keyboardShortcut(.space, modifiers: [])
                 
                 Button("Reset Prompter") {
                     manager.resetScroll()
@@ -89,11 +89,92 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     func setupGlobalShortcuts() {
-        // Local Monitor
+        // Local Monitor (Handles events when app is active)
         localMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            if self?.handleKeyEvent(event) == true {
-                return nil
+            if self?.handleKeyEvent(event, isGlobal: false) == true {
+                return nil // Consumed
             }
+            return event
+        }
+        
+        // Global Monitor (Handles events when app is in background)
+        eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            _ = self?.handleKeyEvent(event, isGlobal: true)
+        }
+    }
+    
+    func handleKeyEvent(_ event: NSEvent, isGlobal: Bool) -> Bool {
+        guard let manager = manager else { return false }
+        
+        let flags = event.modifierFlags
+        let isCmd = flags.contains(.command)
+        let isOption = flags.contains(.option)
+        let isControl = flags.contains(.control)
+        
+        // We want Cmd + Key, but ignoring things like CapsLock or NumLock
+        let hasCmd = isCmd && !isOption && !isControl
+        
+        // 1. ALWAYS GLOBAL SHORTCUTS (Work background & foreground)
+        
+        // Command + L: Toggle Lock
+        if hasCmd && event.charactersIgnoringModifiers?.lowercased() == "l" {
+            manager.isLocked.toggle()
+            return true
+        }
+        
+        // Command + E: Open Editor
+        if hasCmd && event.charactersIgnoringModifiers?.lowercased() == "e" {
+            openWindowAction?(id: "editor")
+            return true
+        }
+        
+        // 2. FOCUS-ONLY SHORTCUTS (Only work when app is active)
+        // If this is a global event (background), stop here
+        if isGlobal { return false }
+        
+        // Space: Play/Pause (keyCode 49)
+        if event.keyCode == 49 { 
+            // Only toggle if no major modifiers (Cmd/Opt/Ctrl) are pressed
+            if !isCmd && !isOption && !isControl {
+                // Check if user is typing in a text field
+                if let responder = NSApp.keyWindow?.firstResponder,
+                   responder.isKind(of: NSTextView.self) {
+                    return false // Let the text view handle the space
+                }
+                manager.togglePlayPause()
+                return true
+            }
+        }
+        
+        // Command + Plus/Minus: Speed
+        if hasCmd && (event.charactersIgnoringModifiers == "+" || event.charactersIgnoringModifiers == "=") {
+            manager.updateSpeed(delta: 0.5)
+            return true
+        }
+        if hasCmd && event.charactersIgnoringModifiers == "-" {
+            manager.updateSpeed(delta: -0.5)
+            return true
+        }
+        
+        // Command + Up/Down: Manual Scroll
+        // 126 = Up, 125 = Down
+        if hasCmd && event.keyCode == 126 { // Up Arrow
+            manager.manualScroll(delta: -60)
+            return true
+        }
+        if hasCmd && event.keyCode == 125 { // Down Arrow
+            manager.manualScroll(delta: 60)
+            return true
+        }
+        
+        // Command + R: Reset
+        if hasCmd && event.charactersIgnoringModifiers?.lowercased() == "r" {
+            manager.resetScroll()
+            return true
+        }
+        
+        return false
+    }
             return event
         }
         
